@@ -1,0 +1,97 @@
+name: CI/CD Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Conventional Commit
+      - name: Conventional Commitlint
+        uses: opensource-nepal/commitlint@v1
+        continue-on-error: false
+
+      # 2. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 3. Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      # 4. Configure environment variables
+      # - name: Configure environment variables
+      #   run: |
+      #     echo "SFTP_USERNAME=${{ secrets.SFTP_USERNAME }}" >> $GITHUB_ENV
+      #     echo "SFTP_PASSWORD=${{ secrets.SFTP_PASSWORD }}" >> $GITHUB_ENV
+      #     echo "SERVER_HOST=${{ secrets.SERVER_HOST }}" >> $GITHUB_ENV
+
+      # 5. Install frontend dependencies
+      # - name: Install frontend dependencies
+      #   run: |
+      #     cd front
+      #     npm install
+      #   continue-on-error: false
+
+      # 6. Build frontend
+      # - name: Build frontend
+      #   run: |
+      #     cd front
+      #     npm run build
+      #   continue-on-error: false
+
+      # 7. Move to dist
+      # - name: Move to dist
+      #   run: |
+      #     ls -al front/dist
+      #   continue-on-error: false
+
+      # 8. Cache node modules
+      # - name: Cache node modules
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.npm
+      #     key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-modules-
+
+      # 9. Set up SSH key
+      # - name: Set up SSH key
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+      #     chmod 600 ~/.ssh/id_ed25519
+
+      # 10. Test SSH connection
+      # - name: Test SSH connection
+      #   run: |
+      #     ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ubuntu@51.83.71.158 'echo "SSH connection successful"'
+
+      # 11. Transfer files via SFTP
+      # - name: Transfer index.html via SFTP
+      #   run: |
+      #     sftp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.SFTP_USERNAME }}@${{ secrets.SERVER_HOST }} <<EOF
+      #       mkdir -p /var/www/html/mackerprod
+      #       cd /var/www/html/mackerprod
+      #       lcd front/dist
+      #       put -r *
+      #       bye
+      #     EOF
+
+      # 12. Deploy to SFTP via SSH
+      # - name: Deploy to SFTP
+      #   uses: appleboy/ssh-action@v1.2.0
+      #   with:
+      #     username: ${{ secrets.SFTP_USERNAME }}
+      #     password: ${{ secrets.SFTP_PASSWORD }}
+      #     port: 22
+      #     timeout: "300s"
+      #     sync: true
+      #     script: |
+      #       rsync -avz --delete dist/ ${{ secrets.SFTP_USERNAME }}@${{ secrets.SERVER_HOST }}:/var/www/html/mackerprod/
