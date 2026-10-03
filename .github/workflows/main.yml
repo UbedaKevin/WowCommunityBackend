@@ -24,6 +24,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20"
+          
+      # 4. Run tests
+      - name: Run tests
+        run: node --test
 
       # 4. Configure environment variables
       # - name: Configure environment variables
