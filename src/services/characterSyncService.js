@@ -6,6 +6,7 @@ const {
 
 const {
     createCharacterEvent,
+    findLevelUpEvent,
 } = require("../models/characterEventModel");
 
 const {
@@ -96,7 +97,10 @@ async function syncCharacter(
             character.equipment
         );
 
-    if (!changed) {
+    const levelEvents =
+    character.levelTracking?.levels ?? [];
+
+    if (!changed && levelEvents.length === 0) {
         return {
             action: "unchanged",
             character: existingCharacter,
@@ -114,22 +118,43 @@ const events = [];
 
 
 // LEVEL UP
+// const levelEvents = character.levelTracking?.levels ?? [];
 
-if (
-    character.level >
-    existingCharacter.level
-) {
-    const event =
-        await createCharacterEvent(
+if (levelEvents.length > 0) {
+    for (const levelEvent of levelEvents) {
+        const existingLevelEvent = await findLevelUpEvent(
+            existingCharacter.id,
+            levelEvent.fromLevel,
+            levelEvent.toLevel,
+            levelEvent.timestamp
+        );
+
+        if (existingLevelEvent) {
+            continue;
+        }
+
+        const event = await createCharacterEvent(
             existingCharacter.id,
             EVENT_TYPES.LEVEL_UP,
             {
-                oldLevel:
-                    existingCharacter.level,
-                newLevel:
-                    character.level,
+                fromLevel: levelEvent.fromLevel,
+                toLevel: levelEvent.toLevel,
+                playtime: levelEvent.playtime,
+                timestamp: levelEvent.timestamp,
             }
         );
+
+        events.push(event);
+    }
+} else if (character.level > existingCharacter.level) {
+    const event = await createCharacterEvent(
+        existingCharacter.id,
+        EVENT_TYPES.LEVEL_UP,
+        {
+            oldLevel: existingCharacter.level,
+            newLevel: character.level,
+        }
+    );
 
     events.push(event);
 }

@@ -209,6 +209,14 @@ async function findProfessionsWithRecipesByCharacterId(characterId) {
     return result.rows;
 }
 
+async function deleteProfession(professionId) {
+    await pool.query(
+        `DELETE FROM professions
+         WHERE id = $1`,
+        [professionId]
+    );
+}
+    
 module.exports = {
     findProfession,
     createProfession,
@@ -222,4 +230,5 @@ module.exports = {
     findProfessionsByCharacterId,
     findRecipesByProfessionId,
     findProfessionsWithRecipesByCharacterId,
+    deleteProfession,
 };

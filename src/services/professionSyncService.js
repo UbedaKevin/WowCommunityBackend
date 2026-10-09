@@ -8,6 +8,8 @@ const {
     findProfession,
     createProfession,
     updateProfession,
+    findProfessionsByCharacterId,
+    deleteProfession,
 
     findRecipe,
     createRecipe,
@@ -117,7 +119,38 @@ async function syncProfessions(
     characterId,
     professions
 ) {
-    for (const profession of Object.values(professions || {})) {
+    const professionList =
+        Object.values(professions || {});
+
+    const incomingSkillLines =
+        new Set(
+            professionList.map(
+                (profession) =>
+                    Number(profession.skillLine)
+            )
+        );
+
+    const existingProfessions =
+        await findProfessionsByCharacterId(
+            characterId
+        );
+
+    // Supprime les métiers qui n'existent plus
+    // dans les SavedVariables.
+    for (const existingProfession of existingProfessions) {
+        if (
+            !incomingSkillLines.has(
+                Number(existingProfession.skill_line)
+            )
+        ) {
+            await deleteProfession(
+                existingProfession.id
+            );
+        }
+    }
+
+    // Synchronise les métiers encore présents.
+    for (const profession of professionList) {
         await syncProfession(
             characterId,
             profession
